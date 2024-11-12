@@ -1,50 +1,66 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { useGLTF, useAnimations } from '@react-three/drei'
+import React, { useEffect, useRef } from 'react';
+import { useGLTF, useAnimations } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 
 export function FlyingBirdModel(props) {
     const group = useRef();
-    const [position, setPosition] = useState([0, 0, 0])
-    const { nodes, materials, animations } = useGLTF('/models/simple_bird/scene-transformed.glb')
-    const { actions } = useAnimations(animations, group)
-    useEffect(() => {
+    const scrollOffsetRef = useRef(0);
+    const velocityRef = useRef(0);
+    const damping = 0.95;
+    const scrollSensitivity = 0.00007;
 
-        const animationName = 'Flying'; // Replace this with your animation's UUID
-        const animationToPlay = animations.find(animation => animation.name === animationName)
-        if (animationToPlay) {
-            actions[animationToPlay.name]?.play()  // Play the animation by name
-        } else {
-            console.log('Animation not found with the specified UUID.')
-        }
-    }, [animations]);
-    const handleKeyDown = (event) => {
-        switch (event.key) {
-            case 'ArrowUp':
-                setPosition((prevPosition) => [prevPosition[0], prevPosition[1], prevPosition[2] - 1])  // Move forward
-                break;
-            case 'ArrowDown':
-                setPosition((prevPosition) => [prevPosition[0], prevPosition[1], prevPosition[2] + 1])  // Move backward
-                break;
-            case 'ArrowLeft':
-                setPosition((prevPosition) => [prevPosition[0] - 1, prevPosition[1], prevPosition[2]])  // Move left
-                break;
-            case 'ArrowRight':
-                setPosition((prevPosition) => [prevPosition[0] + 1, prevPosition[1], prevPosition[2]])  // Move right
-                break;
-            default:
-                break;
-        }
-    }
+    const { nodes, materials, animations } = useGLTF('/models/simple_bird/scene-transformed.glb');
+    const { actions } = useAnimations(animations, group);
+
     useEffect(() => {
-        // Add event listener for keydown
-        window.addEventListener('keydown', handleKeyDown)
-    
-        // Cleanup event listener when component unmounts
-        return () => {
-          window.removeEventListener('keydown', handleKeyDown)
+        const animationName = 'Flying';
+        const animationToPlay = animations.find(animation => animation.name === animationName);
+        if (animationToPlay) {
+            actions[animationToPlay.name]?.play();
+        } else {
+            console.log('Animation not found with the specified UUID.');
         }
-      }, [])
+    }, [animations, actions]);
+
+    useEffect(() => {
+        const handleScroll = (event) => {
+            event.preventDefault();
+            velocityRef.current += event.deltaY * scrollSensitivity;
+        };
+
+        window.addEventListener('wheel', handleScroll, { passive: false });
+
+        return () => {
+            window.removeEventListener('wheel', handleScroll);
+        };
+    }, []);
+
+    useFrame(() => {
+        if (group.current) {
+            const radius = 2;
+            const angle = scrollOffsetRef.current;
+
+            scrollOffsetRef.current += velocityRef.current;
+            velocityRef.current *= damping;
+            if (Math.abs(velocityRef.current) < 0.0001) {
+                velocityRef.current = 0;
+            }
+
+            const x = radius * Math.cos(angle+200);
+            const z = radius * Math.sin(angle + 750);
+
+            group.current.position.set(x, 1, z);
+
+            const tangentX = -radius * Math.sin(angle);
+            const tangentZ = radius * Math.cos(angle);
+
+            const facingAngle = Math.atan2(tangentZ, tangentX);
+            group.current.rotation.y = facingAngle;
+        }
+    });
+
     return (
-        <group ref={group} position={position} {...props} dispose={null}>
+        <group ref={group} {...props} dispose={null}>
             <group name="Sketchfab_Scene">
                 <primitive object={nodes.GLTF_created_0_rootJoint} />
                 <skinnedMesh
@@ -85,7 +101,7 @@ export function FlyingBirdModel(props) {
                 />
             </group>
         </group>
-    )
+    );
 }
 
-useGLTF.preload('/models/simple_bird/scene-transformed.glb')
+useGLTF.preload('/models/simple_bird/scene-transformed.glb');

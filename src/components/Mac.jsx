@@ -45,7 +45,7 @@ const Mac = () => {
         <section id='about' className='h-full w-full common-padding bg-slate-300'>
             <div className="screen-max-width">
                 <h1 id="title" className="section-heading mb-12">
-                    Personal Info
+                    Animated Model
                 </h1>
 
                 <Canvas style={{ width: '100%', height: '100vh' }}>
@@ -63,9 +63,10 @@ const Mac = () => {
                         scale={[1, 1, 1]} 
                         rotation={[0, Math.PI / 2, 0]}
                     /> */}
-                    <OrbitControls
-                        enableZoom={false}
-                        enablePan={true}
+                   <OrbitControls
+                        enableRotate={false}   
+                        enablePan={false}     
+                        enableZoom={false}     
                         minPolarAngle={0}
                         maxPolarAngle={Math.PI / 2}
                     />

@@ -19,15 +19,12 @@ const About = () => {
             duration: 1.5,
             y: 0
         })
-
         const tl = gsap.timeline({ defaults: { duration: 1, ease: 'power3.out' } });
-
-        // Animate the input fields sequentially
         tl.to('.input-field', {
             opacity: 1,
-            y: 0, // Start from the left (-100px)
-            stagger: 0.2, // Add delay between each input field animation
-            duration: 1.5, // Duration for each animation
+            y: 0,
+            stagger: 0.2, 
+            duration: 1.5, 
         });
     }, [])
 
